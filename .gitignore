@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+.env
+*.log
+
+# C#
+*.dll
+*.pdb
+*.suo
+*.user
+/bin/
+/obj/
+
+# Général
+.DS_Store
+.idea/
+.vscode/
