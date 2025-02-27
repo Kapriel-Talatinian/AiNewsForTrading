@@ -1,4 +1,4 @@
-# 🤖 Trading Bot AI
+# 🤖 AiNewsForTrading
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)  
 [![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/)  
@@ -7,7 +7,7 @@
 
 ## 📌 Overview
 
-Trading Bot AI is an algorithmic trading solution that leverages real-time financial news analysis powered by GPT-4. It integrates a C# trading bot with a Python API to deliver timely trading recommendations based on market news.
+AiNewsForTrading is an algorithmic trading solution that leverages real-time financial news analysis powered by GPT-4. It integrates a C# trading bot with a Python API to deliver timely trading recommendations based on market news.
 
 ## 🚀 Features
 
@@ -43,7 +43,7 @@ Trading Bot AI is an algorithmic trading solution that leverages real-time finan
 ### Clone Repository
 ```bash
 git clone https://github.com/Kapriel-Talatinian/AiNewsForTrading.git
-cd trading-bot-ai
+cd API TRADING
 
 Set Up Python Environment
 bash
