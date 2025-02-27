@@ -10,7 +10,6 @@ This repository contains the code for a Trading Bot that leverages financial new
 - **GPT-4 Integration:** Analyzes news articles to provide trading recommendations.
 - **Optimized Logging:** Detailed logs for debugging and performance monitoring.
 - **Robust Error Handling:** Improved input validation and error management.
-- **Mermaid.js Visualization:** A graphical representation of the project structure.
 
 ## Project Structure
 
@@ -19,7 +18,7 @@ graph TD;
     A[Trading Bot AI Repository] --> B[cbot_api];
     B --> C[cBot];
     B --> D[API];
-    C --> E[NewsTradingBot.cs];
+    C --> E[ctraderbot.cs];
     D --> F[api.py];
     D --> G[.env];
     A --> H[.gitignore];
