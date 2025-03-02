@@ -35,25 +35,33 @@ AiNewsForTrading is an algorithmic trading solution that leverages real-time fin
 - .NET environment (Visual Studio recommended for C# development)  
 - Valid API keys for NewsAPI and OpenAI  
 - Internet connection  
-- Basic understanding of algorithmic trading
+- Basic understanding of algorithmic trading  
 
+📬 Contact
+📧 Email: kapriel.talatinian@gmail.com
+🔗 LinkedIn: Kapriel TALATINIAN
+MIT License © 2024 Kapriel TALATINIAN
 
 ```mermaid
 graph TD;
-    A[AiNewsForTrading Repository] --> B[API TRADING];
-    B --> C[ctraderbot.cs.cs];
-    B --> D[api.py];
-    B --> E[.env];
-    A --> F[.gitignore];
-    A --> G[README.md];
+    A[Start] -->|OnBar Event| B[GetSignalAnalysis]
+    B -->|Fetch Signal from API| C[Send API Request]
+    C -->|Receive Trading Signal| D[Validate Signal]
+    D -->|Check Confidence & Recommendation| E{Valid Signal?}
+    E -->|Yes| F[Execute Trade Order]
+    E -->|No| G[Ignore Signal]
+    F --> H[Order Executed]
+    G --> H
+    H --> I[End]
 
-📬 Contact  
-📧 **Email:** [kapriel.talatinian@gmail.com](mailto:kapriel.talatinian@gmail.com)  
-🔗 **LinkedIn:** [Kapriel TALATINIAN](https://www.linkedin.com/in/kapriel-talatinian/)  
+    subgraph API Server
+        J[Receive API Request] --> K[Fetch News]
+        K --> L[Analyze News with GPT-4]
+        L --> M[Generate Trading Signal]
+        M --> N[Send Response to Bot]
+    end
+    
+    C -->|Request| J
+    N -->|Response| D
 
-LinkedIn: Kapriel TALATINIAN
 
-📜 License
-MIT License © 2024 Kapriel TALATINIAN
-
-Built with ❤️ by Kapriel TALATINIAN
