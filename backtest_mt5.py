@@ -7,7 +7,7 @@ from datetime import datetime
 
 class BacktestBotMT5:
     def __init__(self, symbol, timeframe, start, end, risk, leverage, max_pyramids):
-        # Config du backtest
+        # Configuration du backtest
         self.symbol = symbol
         self.timeframe = timeframe
         self.start = start      # datetime
@@ -18,13 +18,13 @@ class BacktestBotMT5:
         self.capital = 100_000
         self.balance = self.capital
 
-        # Connexion MT5
-        mt5.initialize()
+        # Initialise MT5
+        if not mt5.initialize():
+            raise RuntimeError(f"MT5 initialize failed: {mt5.last_error()}")
         mt5.symbol_select(self.symbol, True)
 
         # Chargement des données
-        rates = mt5.copy_rates_range(self.symbol, self.timeframe,
-                                     self.start, self.end)
+        rates = mt5.copy_rates_range(self.symbol, self.timeframe, self.start, self.end)
         df = pd.DataFrame(rates)
         df['time'] = pd.to_datetime(df['time'], unit='s')
         df.set_index('time', inplace=True)
@@ -39,7 +39,7 @@ class BacktestBotMT5:
         loss = -delta.where(delta<0, 0).rolling(14).mean()
         self.df['RSI'] = 100 - (100 / (1 + gain/loss))
 
-        # État de position
+        # Etat de la position
         self.position = None
         self.entries = []
         self.pyramid_count = 0
@@ -48,18 +48,18 @@ class BacktestBotMT5:
         self.balance_history = [self.balance]
         self.trades = []
 
-    def enter(self, side, price, sl, tp, time):
-        leg_size = self.balance * self.risk * self.leverage
+    def enter(self, side, price, sl, tp, timestamp):
+        size = self.balance * self.risk * self.leverage
         if self.position is None:
             self.position = side
             self.pyramid_count = 0
             self.entries = []
-        self.entries.append({'time': time, 'price': price, 'size': leg_size})
+        self.entries.append({'time': timestamp, 'price': price, 'size': size})
         self.pyramid_count += 1
         self.stop_loss = sl
         self.take_profit = tp
 
-    def exit_all(self, price, time):
+    def exit_all(self, price, timestamp):
         for leg in self.entries:
             if self.position == 'long':
                 pnl = leg['size'] * ((price - leg['price']) / leg['price'])
@@ -67,7 +67,7 @@ class BacktestBotMT5:
                 pnl = leg['size'] * ((leg['price'] - price) / leg['price'])
             self.trades.append({
                 'entry_time': leg['time'],
-                'exit_time': time,
+                'exit_time': timestamp,
                 'side': self.position,
                 'entry_price': leg['price'],
                 'exit_price': price,
@@ -76,7 +76,6 @@ class BacktestBotMT5:
             })
             self.balance += pnl
         self.balance_history.append(self.balance)
-        # reset
         self.position = None
         self.entries = []
         self.pyramid_count = 0
@@ -89,14 +88,14 @@ class BacktestBotMT5:
         cong_th = 0.002
         df = self.df
         for i in range(pw, len(df)-2):
-            window = df.iloc[i-pw:i]
-            p1, p2, p3 = window.iloc[0], window.iloc[pw//2], window.iloc[-1]
+            w = df.iloc[i-pw:i]
+            p1, p2, p3 = w.iloc[0], w.iloc[pw//2], w.iloc[-1]
             slope, intercept, *_ = linregress(
                 [p1.name.value, p3.name.value],
                 [p1['Close'], p3['Close']]
             )
             t = df.index[i].value
-            mid = slope*t + intercept
+            mid = slope * t + intercept
             diff = abs(p2['Close'] - p1['Close'])
             upper, lower = mid + diff, mid - diff
 
@@ -107,19 +106,17 @@ class BacktestBotMT5:
             rsi = df['RSI'].iloc[i]
             up = df['MA20'].iloc[i] > df['MA50'].iloc[i]
             nh, nl = df['High'].iloc[i+1], df['Low'].iloc[i+1]
-            t_next = df.index[i+1]
-            # sorties
+            ts = df.index[i+1]
             if self.position == 'long':
                 if nh >= self.take_profit:
-                    self.exit_all(self.take_profit, t_next)
+                    self.exit_all(self.take_profit, ts)
                 elif nl <= self.stop_loss:
-                    self.exit_all(self.stop_loss, t_next)
+                    self.exit_all(self.stop_loss, ts)
             elif self.position == 'short':
                 if nl <= self.take_profit:
-                    self.exit_all(self.take_profit, t_next)
+                    self.exit_all(self.take_profit, ts)
                 elif nh >= self.stop_loss:
-                    self.exit_all(self.stop_loss, t_next)
-            # entrées
+                    self.exit_all(self.stop_loss, ts)
             if prev_c <= upper < curr_c and up and rsi >= 55:
                 if self.position == 'short': continue
                 sl, tp = curr_c - diff*0.5, curr_c + diff
@@ -135,22 +132,22 @@ class BacktestBotMT5:
         df_tr = pd.DataFrame(self.trades)
         df_tr.to_csv('mt5_trades_log.csv', index=False)
         balances = np.array(self.balance_history)
-        drawdown = (np.maximum.accumulate(balances) - balances).max()
-        print('=== MT5 BACKTEST RESULTATS ===')
+        dd = (np.maximum.accumulate(balances) - balances).max()
+        print('=== MT5 BACKTEST RESULTS ===')
         print(f'Capital initial: {self.capital}')
         print(f'Capital final  : {self.balance:.2f}')
         print(f'Trades         : {len(df_tr)}')
-        print(f'Max drawdown   : {drawdown:.2f}')
+        print(f'Max drawdown   : {dd:.2f}')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--risk', type=float, default=0.1)
-    parser.add_argument('--leverage', type=int, default=30)
-    parser.add_argument('--max_pyramids', type=int, default=3)
     parser.add_argument('--symbol', type=str, default='BTCUSD')
     parser.add_argument('--timeframe', type=int, default=mt5.TIMEFRAME_H1)
     parser.add_argument('--start', type=str, default='2025-01-01')
     parser.add_argument('--end', type=str, default='2025-05-01')
+    parser.add_argument('--risk', type=float, default=0.1)
+    parser.add_argument('--leverage', type=int, default=30)
+    parser.add_argument('--max_pyramids', type=int, default=3)
     args = parser.parse_args()
 
     start = datetime.fromisoformat(args.start)
