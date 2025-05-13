@@ -3,8 +3,9 @@ flask>=3.0.0
 requests>=2.31.0
 openai>=1.12.0
 python-dotenv>=1.0.0streamlit==1.45.1
-streamlit-autorefresh==0.0.5
+streamlit==1.45.1
+streamlit-autorefresh>=1.0.0
 openai>=1.0.0
-python-dotenv
-pandas
-yfinance
+python-dotenv>=1.0.0
+pandas>=2.2.3
+yfinance>=0.2.28
